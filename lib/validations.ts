@@ -22,7 +22,7 @@ export const updateBookSchema = bookSchema.partial().required({ id: true })
 // Reading Session validation schema
 export const readingSessionSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
-  minutes: z.number().min(1, "Minutes must be at least 1").max(1440, "Minutes cannot exceed 24 hours"),
+  minutes: z.number().min(0, "Minutes must be at least 0").max(1440, "Minutes cannot exceed 24 hours"),
 })
 
 export const createReadingSessionSchema = readingSessionSchema

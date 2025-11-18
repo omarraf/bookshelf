@@ -50,8 +50,13 @@ const UserSettingsSchema = new Schema<UserSettingsDocument>(
   }
 )
 
+// In dev mode, delete the cached model to ensure schema updates are picked up
+if (process.env.NODE_ENV === "development" && mongoose.models.UserSettings) {
+  delete mongoose.models.UserSettings
+  delete mongoose.connection.models.UserSettings
+}
+
 const UserSettingsModel: Model<UserSettingsDocument> =
-  mongoose.models.UserSettings ||
   mongoose.model<UserSettingsDocument>("UserSettings", UserSettingsSchema)
 
 export default UserSettingsModel

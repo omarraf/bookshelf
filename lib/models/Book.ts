@@ -88,7 +88,12 @@ BookSchema.index({ userId: 1, status: 1 })
 BookSchema.index({ userId: 1, finishDate: -1 })
 
 // Prevent model recompilation in development
-const BookModel: Model<BookDocument> =
-  mongoose.models.Book || mongoose.model<BookDocument>("Book", BookSchema)
+// In dev mode, delete the cached model to ensure schema updates are picked up
+if (process.env.NODE_ENV === "development" && mongoose.models.Book) {
+  delete mongoose.models.Book
+  delete mongoose.connection.models.Book
+}
+
+const BookModel: Model<BookDocument> = mongoose.model<BookDocument>("Book", BookSchema)
 
 export default BookModel

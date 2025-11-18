@@ -23,7 +23,7 @@ const ReadingSessionSchema = new Schema<ReadingSessionDocument>(
     minutes: {
       type: Number,
       required: [true, "Minutes is required"],
-      min: [1, "Minutes must be at least 1"],
+      min: [0, "Minutes must be at least 0"],
       max: [1440, "Minutes cannot exceed 24 hours (1440 minutes)"],
     },
   },
@@ -45,8 +45,13 @@ ReadingSessionSchema.index({ userId: 1, date: -1 })
 // Prevent duplicate sessions on the same day (optional - remove if users can log multiple sessions per day)
 // ReadingSessionSchema.index({ userId: 1, date: 1 }, { unique: true })
 
+// In dev mode, delete the cached model to ensure schema updates are picked up
+if (process.env.NODE_ENV === "development" && mongoose.models.ReadingSession) {
+  delete mongoose.models.ReadingSession
+  delete mongoose.connection.models.ReadingSession
+}
+
 const ReadingSessionModel: Model<ReadingSessionDocument> =
-  mongoose.models.ReadingSession ||
   mongoose.model<ReadingSessionDocument>("ReadingSession", ReadingSessionSchema)
 
 export default ReadingSessionModel
