@@ -3,7 +3,6 @@ import { getSession } from "@/lib/auth-helpers"
 import dbConnect from "@/lib/mongodb"
 import ReadingSessionModel from "@/lib/models/ReadingSession"
 import { createReadingSessionSchema } from "@/lib/validations"
-import { v4 as uuidv4 } from "uuid"
 
 // GET /api/reading-sessions - Get all reading sessions for the authenticated user
 export async function GET(request: NextRequest) {
@@ -84,9 +83,6 @@ export async function POST(request: NextRequest) {
 
     await dbConnect()
 
-    // Generate a UUID for the session
-    const sessionId = uuidv4()
-
     // Check if a session already exists for this date
     const existingSession = await ReadingSessionModel.findOne({
       userId,
@@ -120,11 +116,10 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      // Create new session
+      // Create new session (let Mongoose auto-generate ObjectId)
       readingSession = await ReadingSessionModel.create({
         ...validation.data,
         userId,
-        _id: sessionId,
       })
     }
 

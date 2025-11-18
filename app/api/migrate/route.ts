@@ -4,7 +4,6 @@ import dbConnect from "@/lib/mongodb"
 import BookModel from "@/lib/models/Book"
 import ReadingSessionModel from "@/lib/models/ReadingSession"
 import { migrationDataSchema } from "@/lib/validations"
-import { v4 as uuidv4 } from "uuid"
 
 // POST /api/migrate - Migrate localStorage data to database
 export async function POST(request: NextRequest) {
@@ -48,11 +47,9 @@ export async function POST(request: NextRequest) {
     // Migrate books
     for (const book of books) {
       try {
-        const bookId = uuidv4()
         await BookModel.create({
           ...book,
           userId,
-          _id: bookId,
           dateAdded: book.dateAdded || new Date().toISOString(),
         })
         results.booksCreated++
@@ -81,12 +78,10 @@ export async function POST(request: NextRequest) {
           })
           results.sessionsCreated++
         } else {
-          // Create new session
-          const sessionId = uuidv4()
+          // Create new session (let Mongoose auto-generate ObjectId)
           await ReadingSessionModel.create({
             ...session,
             userId,
-            _id: sessionId,
           })
           results.sessionsCreated++
         }

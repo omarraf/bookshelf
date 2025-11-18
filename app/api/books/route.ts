@@ -3,7 +3,6 @@ import { getSession } from "@/lib/auth-helpers"
 import dbConnect from "@/lib/mongodb"
 import BookModel from "@/lib/models/Book"
 import { createBookSchema } from "@/lib/validations"
-import { v4 as uuidv4 } from "uuid"
 
 // GET /api/books - Get all books for the authenticated user
 export async function GET(request: NextRequest) {
@@ -91,14 +90,10 @@ export async function POST(request: NextRequest) {
 
     await dbConnect()
 
-    // Generate a UUID for the book if not provided
-    const bookId = uuidv4()
-
-    // Create book with userId
+    // Create book with userId (let Mongoose auto-generate ObjectId)
     const book = await BookModel.create({
       ...validation.data,
       userId,
-      _id: bookId,
       dateAdded: validation.data.dateAdded || new Date().toISOString(),
     })
 
