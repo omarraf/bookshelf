@@ -181,71 +181,69 @@ export function ReadingHeatmap({ sessions, onAddSession, isLoading = false }: Re
     }
   }
 
-  if (isLoading) {
-    return (
-      <Card className="shadow-lg border-0 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Calendar className="h-4 w-4 text-primary" />
-              </div>
-              <div className="h-6 w-32 bg-muted/50 rounded animate-pulse" />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="text-center p-3 bg-card rounded-xl border-2 border-muted/20">
-                <div className="h-8 w-12 bg-muted/50 rounded mx-auto mb-1 animate-pulse" />
-                <div className="h-4 w-16 bg-muted/50 rounded mx-auto animate-pulse" />
-              </div>
-            ))}
-          </div>
-          <div className="h-64 bg-muted/30 rounded-xl animate-pulse" />
-        </CardContent>
-      </Card>
-    )
-  }
-
-  // Empty state
-  if (sessions.length === 0) {
-    return (
-      <Card className="shadow-lg border-0 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-foreground">
+  // Render loading state
+  const renderLoadingState = () => (
+    <Card className="shadow-lg border-0 bg-card/50 backdrop-blur-sm">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <div className="p-2 bg-primary/10 rounded-lg">
               <Calendar className="h-4 w-4 text-primary" />
             </div>
-            Reading Journey
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
-          <div className="p-4 bg-primary/10 rounded-full">
-            <BookOpen className="h-8 w-8 text-primary" />
+            <div className="h-6 w-32 bg-muted/50 rounded animate-pulse" />
           </div>
-          <div className="text-center space-y-2">
-            <h3 className="font-semibold text-lg">Start Your Reading Journey</h3>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              Track your daily reading time and build a consistent habit. Your calendar will come alive as you log your reading sessions!
-            </p>
-          </div>
-          <Button onClick={() => handleDayClick(today)} className="rounded-full shadow-md">
-            <Calendar className="h-4 w-4 mr-2" />
-            Log Today's Reading
-          </Button>
-          <div className="mt-6 p-4 bg-muted/30 rounded-lg max-w-md">
-            <p className="text-xs text-muted-foreground text-center">
-              💡 Tip: Reading just 15 minutes a day can help you finish 20+ books per year!
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="text-center p-3 bg-card rounded-xl border-2 border-muted/20">
+              <div className="h-8 w-12 bg-muted/50 rounded mx-auto mb-1 animate-pulse" />
+              <div className="h-4 w-16 bg-muted/50 rounded mx-auto animate-pulse" />
+            </div>
+          ))}
+        </div>
+        <div className="h-64 bg-muted/30 rounded-xl animate-pulse" />
+      </CardContent>
+    </Card>
+  )
 
-  return (
+  // Render empty state
+  const renderEmptyState = () => (
+    <Card className="shadow-lg border-0 bg-card/50 backdrop-blur-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-foreground">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Calendar className="h-4 w-4 text-primary" />
+          </div>
+          Reading Journey
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
+        <div className="p-4 bg-primary/10 rounded-full">
+          <BookOpen className="h-8 w-8 text-primary" />
+        </div>
+        <div className="text-center space-y-2">
+          <h3 className="font-semibold text-lg">Start Your Reading Journey</h3>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Track your daily reading time and build a consistent habit. Your calendar will come alive as you log your reading sessions!
+          </p>
+        </div>
+        <Button onClick={() => handleDayClick(today)} className="rounded-full shadow-md">
+          <Calendar className="h-4 w-4 mr-2" />
+          Log Today's Reading
+        </Button>
+        <div className="mt-6 p-4 bg-muted/30 rounded-lg max-w-md">
+          <p className="text-xs text-muted-foreground text-center">
+            💡 Tip: Reading just 15 minutes a day can help you finish 20+ books per year!
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  // Render main calendar view
+  const renderCalendarView = () => (
     <TooltipProvider delayDuration={200}>
       <Card className="shadow-lg border-0 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-4">
@@ -407,8 +405,15 @@ export function ReadingHeatmap({ sessions, onAddSession, isLoading = false }: Re
           )}
         </CardContent>
       </Card>
+    </TooltipProvider>
+  )
 
-      {/* Add/Edit Dialog */}
+  return (
+    <>
+      {/* Render appropriate view based on state */}
+      {isLoading ? renderLoadingState() : sessions.length === 0 ? renderEmptyState() : renderCalendarView()}
+
+      {/* Add/Edit Dialog - always rendered so it works in all states */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
@@ -460,6 +465,6 @@ export function ReadingHeatmap({ sessions, onAddSession, isLoading = false }: Re
           </form>
         </DialogContent>
       </Dialog>
-    </TooltipProvider>
+    </>
   )
 }
