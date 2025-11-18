@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, BookOpen } from "lucide-react"
 import confetti from "canvas-confetti"
 import { toast } from "sonner"
-import type { Book, ReadingSession, UserSettings } from "@/types"
+import type { Book, ReadingSession, ReadingSessionFormData, UserSettings } from "@/types"
 
 export default function HomePage() {
   const { data: session, isPending } = useSession()
@@ -182,22 +182,35 @@ export default function HomePage() {
     }
   }
 
-  const addReadingSession = async (session: ReadingSession) => {
+  const addReadingSession = async (session: ReadingSessionFormData) => {
     // Optimistic update
     const previousSessions = readingSessions
-    setReadingSessions((prev) => {
-      const existingIndex = prev.findIndex((s) => s.date === session.date)
-      if (existingIndex >= 0) {
-        const updated = [...prev]
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          minutes: updated[existingIndex].minutes + session.minutes,
+
+    // Handle deletion (when minutes = 0)
+    if (session.minutes === 0) {
+      setReadingSessions((prev) => prev.filter((s) => s.date !== session.date))
+    } else {
+      // Add or update session
+      setReadingSessions((prev) => {
+        const existingIndex = prev.findIndex((s) => s.date === session.date)
+        if (existingIndex >= 0) {
+          const updated = [...prev]
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            minutes: session.minutes,
+          }
+          return updated
+        } else {
+          // Create temporary session for optimistic update
+          const tempSession: ReadingSession = {
+            ...session,
+            id: crypto.randomUUID(),
+            userId: "",
+          }
+          return [...prev, tempSession]
         }
-        return updated
-      } else {
-        return [...prev, session]
-      }
-    })
+      })
+    }
 
     try {
       const res = await fetch("/api/reading-sessions", {
@@ -207,35 +220,41 @@ export default function HomePage() {
       })
 
       if (!res.ok) {
-        throw new Error("Failed to add reading session")
+        throw new Error("Failed to update reading session")
       }
 
       const data = await res.json()
 
-      // Update with server data
-      setReadingSessions((prev) => {
-        const existingIndex = prev.findIndex((s) => s.date === session.date)
-        if (existingIndex >= 0) {
-          const updated = [...prev]
-          updated[existingIndex] = data.data
-          return updated
-        } else {
-          return [...prev, data.data]
-        }
-      })
+      // Update with server data if not a deletion
+      if (session.minutes > 0 && data.data) {
+        setReadingSessions((prev) => {
+          const existingIndex = prev.findIndex((s) => s.date === session.date)
+          if (existingIndex >= 0) {
+            const updated = [...prev]
+            updated[existingIndex] = data.data
+            return updated
+          } else {
+            return [...prev, data.data]
+          }
+        })
+      }
 
-      toast.success("Reading time logged successfully!")
-      confetti({
-        particleCount: 30,
-        spread: 50,
-        origin: { y: 0.6 },
-        colors: ["#10b981", "#059669"],
-      })
+      if (session.minutes === 0) {
+        toast.success("Reading session deleted!")
+      } else {
+        toast.success("Reading time logged successfully!")
+        confetti({
+          particleCount: 30,
+          spread: 50,
+          origin: { y: 0.6 },
+          colors: ["#10b981", "#059669"],
+        })
+      }
     } catch (error) {
       // Revert optimistic update
       setReadingSessions(previousSessions)
-      console.error("Error adding reading session:", error)
-      toast.error("Failed to log reading time. Please try again.")
+      console.error("Error updating reading session:", error)
+      toast.error("Failed to update reading session. Please try again.")
     }
   }
 
@@ -275,7 +294,7 @@ export default function HomePage() {
                 <QuoteOfTheDay books={books} />
               </div>
               <div>
-                <ReadingHeatmap sessions={readingSessions} onAddSession={addReadingSession} />
+                <ReadingHeatmap sessions={readingSessions} onAddSession={addReadingSession} isLoading={isLoading} />
               </div>
             </div>
 

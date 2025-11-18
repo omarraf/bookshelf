@@ -55,16 +55,16 @@ export async function GET(request: NextRequest) {
 // POST /api/reading-sessions - Create a new reading session
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession()
+    const authSession = await getSession()
 
-    if (!session) {
+    if (!authSession) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
 
-    const userId = session.user.id
+    const userId = authSession.user.id
 
     const body = await request.json()
 
@@ -93,25 +93,42 @@ export async function POST(request: NextRequest) {
       date: validation.data.date,
     })
 
-    let session
+    let readingSession
 
     if (existingSession) {
-      // Update existing session by adding minutes
-      session = await ReadingSessionModel.findByIdAndUpdate(
+      // If minutes is 0, delete the session (for delete functionality)
+      if (validation.data.minutes === 0) {
+        await ReadingSessionModel.findByIdAndDelete(existingSession._id)
+        return NextResponse.json({
+          success: true,
+          message: "Reading session deleted successfully",
+        })
+      }
+
+      // Update existing session by setting minutes (not adding)
+      readingSession = await ReadingSessionModel.findByIdAndUpdate(
         existingSession._id,
-        { $inc: { minutes: validation.data.minutes } },
+        { minutes: validation.data.minutes },
         { new: true }
       )
     } else {
+      // Don't create a session with 0 minutes
+      if (validation.data.minutes === 0) {
+        return NextResponse.json({
+          success: true,
+          message: "No session to delete",
+        })
+      }
+
       // Create new session
-      session = await ReadingSessionModel.create({
+      readingSession = await ReadingSessionModel.create({
         ...validation.data,
         userId,
         _id: sessionId,
       })
     }
 
-    if (!session) {
+    if (!readingSession) {
       return NextResponse.json(
         { success: false, error: "Failed to create reading session" },
         { status: 500 }
@@ -120,12 +137,12 @@ export async function POST(request: NextRequest) {
 
     // Transform to our ReadingSession type
     const transformedSession = {
-      id: session._id.toString(),
-      userId: session.userId,
-      date: session.date,
-      minutes: session.minutes,
-      createdAt: session.createdAt,
-      updatedAt: session.updatedAt,
+      id: readingSession._id.toString(),
+      userId: readingSession.userId,
+      date: readingSession.date,
+      minutes: readingSession.minutes,
+      createdAt: readingSession.createdAt,
+      updatedAt: readingSession.updatedAt,
     }
 
     return NextResponse.json(
