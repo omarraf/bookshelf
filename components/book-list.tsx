@@ -7,19 +7,27 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { BookDetails } from "@/components/book-details"
-import { Search, Filter, BookOpen } from "lucide-react"
-import type { Book } from "@/app/page"
+import { EmptyState } from "@/components/empty-state"
+import { Search, Filter, BookOpen, ArrowUpDown } from "lucide-react"
+import type { Book } from "@/types"
 
 interface BookListProps {
   books: Book[]
   onUpdateBook: (id: string, updates: Partial<Book>) => void
   onDeleteBook: (id: string) => void
+  onAddBook?: () => void
 }
 
-export function BookList({ books, onUpdateBook, onDeleteBook }: BookListProps) {
+export function BookList({ books, onUpdateBook, onDeleteBook, onAddBook }: BookListProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<string>("dateAdded-desc")
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
+
+  // Show empty state if no books at all
+  if (books.length === 0) {
+    return <EmptyState type="books" onAction={onAddBook} />
+  }
 
   const filteredBooks = books.filter((book) => {
     const matchesSearch =
@@ -29,10 +37,35 @@ export function BookList({ books, onUpdateBook, onDeleteBook }: BookListProps) {
     return matchesSearch && matchesStatus
   })
 
+  // Sort books
+  const sortedBooks = [...filteredBooks].sort((a, b) => {
+    switch (sortBy) {
+      case "title-asc":
+        return a.title.localeCompare(b.title)
+      case "title-desc":
+        return b.title.localeCompare(a.title)
+      case "author-asc":
+        return a.author.localeCompare(b.author)
+      case "author-desc":
+        return b.author.localeCompare(a.author)
+      case "dateAdded-asc":
+        return new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime()
+      case "dateAdded-desc":
+        return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()
+      case "rating-desc":
+        return (b.rating || 0) - (a.rating || 0)
+      case "rating-asc":
+        return (a.rating || 0) - (b.rating || 0)
+      default:
+        return 0
+    }
+  })
+
   const groupedBooks = {
-    "To Read": filteredBooks.filter((book) => book.status === "To Read"),
-    "In Progress": filteredBooks.filter((book) => book.status === "In Progress"),
-    Completed: filteredBooks.filter((book) => book.status === "Completed"),
+    "To Read": sortedBooks.filter((book) => book.status === "To Read"),
+    "In Progress": sortedBooks.filter((book) => book.status === "In Progress"),
+    Completed: sortedBooks.filter((book) => book.status === "Completed"),
+    "Did Not Finish": sortedBooks.filter((book) => book.status === "Did Not Finish"),
   }
 
   const getStatusColor = (status: string) => {
@@ -43,6 +76,8 @@ export function BookList({ books, onUpdateBook, onDeleteBook }: BookListProps) {
         return "bg-amber-100 text-amber-800 border-amber-200"
       case "Completed":
         return "bg-emerald-100 text-emerald-800 border-emerald-200"
+      case "Did Not Finish":
+        return "bg-gray-100 text-gray-800 border-gray-200"
       default:
         return "bg-muted text-muted-foreground"
     }
@@ -64,7 +99,7 @@ export function BookList({ books, onUpdateBook, onDeleteBook }: BookListProps) {
 
   return (
     <div className="space-y-6">
-      {/* Search and Filter */}
+      {/* Search, Filter, and Sort */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -85,6 +120,23 @@ export function BookList({ books, onUpdateBook, onDeleteBook }: BookListProps) {
             <SelectItem value="To Read">To Read</SelectItem>
             <SelectItem value="In Progress">In Progress</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
+            <SelectItem value="Did Not Finish">Did Not Finish</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="w-full sm:w-56">
+            <ArrowUpDown className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="dateAdded-desc">Newest First</SelectItem>
+            <SelectItem value="dateAdded-asc">Oldest First</SelectItem>
+            <SelectItem value="title-asc">Title (A-Z)</SelectItem>
+            <SelectItem value="title-desc">Title (Z-A)</SelectItem>
+            <SelectItem value="author-asc">Author (A-Z)</SelectItem>
+            <SelectItem value="author-desc">Author (Z-A)</SelectItem>
+            <SelectItem value="rating-desc">Highest Rated</SelectItem>
+            <SelectItem value="rating-asc">Lowest Rated</SelectItem>
           </SelectContent>
         </Select>
       </div>

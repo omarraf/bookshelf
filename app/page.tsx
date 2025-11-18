@@ -9,8 +9,14 @@ import { DashboardStats } from "@/components/dashboard-stats"
 import { ReadingHeatmap } from "@/components/reading-heatmap"
 import { QuoteOfTheDay } from "@/components/quote-of-the-day"
 import { MigrationDialog } from "@/components/migration-dialog"
+import {
+  DashboardStatsSkeleton,
+  QuoteSkeleton,
+  ReadingHeatmapSkeleton,
+  BookListSkeleton,
+} from "@/components/skeletons"
 import { Button } from "@/components/ui/button"
-import { Plus, BookOpen, Loader2 } from "lucide-react"
+import { Plus, BookOpen } from "lucide-react"
 import confetti from "canvas-confetti"
 import { toast } from "sonner"
 import type { Book, ReadingSession, UserSettings } from "@/types"
@@ -238,18 +244,6 @@ export default function HomePage() {
     loadData() // Reload data after migration
   }
 
-  // Show loading state
-  if (isPending || isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading your bookshelf...</p>
-        </div>
-      </div>
-    )
-  }
-
   // User must be signed in (middleware should handle this, but just in case)
   if (!session) {
     return null
@@ -259,30 +253,52 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Show skeleton loaders while loading */}
+        {(isPending || isLoading) ? (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+              <div className="space-y-6">
+                <DashboardStatsSkeleton />
+                <QuoteSkeleton />
+              </div>
+              <div>
+                <ReadingHeatmapSkeleton />
+              </div>
+            </div>
+            <BookListSkeleton />
+          </>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+              <div className="space-y-6">
+                <DashboardStats books={books} yearlyGoal={userSettings?.yearlyGoal || 24} />
+                <QuoteOfTheDay books={books} />
+              </div>
+              <div>
+                <ReadingHeatmap sessions={readingSessions} onAddSession={addReadingSession} />
+              </div>
+            </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <div className="space-y-6">
-            <DashboardStats books={books} yearlyGoal={userSettings?.yearlyGoal || 24} />
-            <QuoteOfTheDay books={books} />
-          </div>
-          <div>
-            <ReadingHeatmap sessions={readingSessions} onAddSession={addReadingSession} />
-          </div>
-        </div>
+            <div className="text-center mb-8">
+              <Button
+                onClick={() => setIsAddDialogOpen(true)}
+                className="gap-2 shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-3 text-lg rounded-full"
+                size="lg"
+              >
+                <Plus className="h-5 w-5" />
+                Add a New Book
+              </Button>
+            </div>
 
-        <div className="text-center mb-8">
-          <Button
-            onClick={() => setIsAddDialogOpen(true)}
-            className="gap-2 shadow-lg hover:shadow-xl transition-all duration-300 px-8 py-3 text-lg rounded-full"
-            size="lg"
-          >
-            <Plus className="h-5 w-5" />
-            Add a New Book
-          </Button>
-        </div>
-
-        {/* Book List */}
-        <BookList books={books} onUpdateBook={updateBook} onDeleteBook={deleteBook} />
+            {/* Book List */}
+            <BookList
+              books={books}
+              onUpdateBook={updateBook}
+              onDeleteBook={deleteBook}
+              onAddBook={() => setIsAddDialogOpen(true)}
+            />
+          </>
+        )}
 
         {/* Add Book Dialog */}
         <AddBookDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} onAddBook={addBook} />

@@ -6,7 +6,7 @@ export interface Book {
   title: string
   author: string
   genre: string
-  status: "To Read" | "In Progress" | "Completed"
+  status: "To Read" | "In Progress" | "Completed" | "Did Not Finish"
   startDate?: string
   finishDate?: string
   rating?: number
@@ -54,7 +54,7 @@ export interface BookFormData {
   title: string
   author: string
   genre: string
-  status: "To Read" | "In Progress" | "Completed"
+  status: "To Read" | "In Progress" | "Completed" | "Did Not Finish"
   startDate?: string
   finishDate?: string
   rating?: number

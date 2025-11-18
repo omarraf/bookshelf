@@ -168,6 +168,7 @@ export function AddBookDialog({ open, onOpenChange, onAddBook }: AddBookDialogPr
                   <SelectItem value="To Read">To Read</SelectItem>
                   <SelectItem value="In Progress">In Progress</SelectItem>
                   <SelectItem value="Completed">Completed</SelectItem>
+                  <SelectItem value="Did Not Finish">Did Not Finish</SelectItem>
                 </SelectContent>
               </Select>
             </div>

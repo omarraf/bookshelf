@@ -6,7 +6,7 @@ export const bookSchema = z.object({
   title: z.string().min(1, "Title is required").max(500),
   author: z.string().min(1, "Author is required").max(200),
   genre: z.string().min(1, "Genre is required"),
-  status: z.enum(["To Read", "In Progress", "Completed"]),
+  status: z.enum(["To Read", "In Progress", "Completed", "Did Not Finish"]),
   startDate: z.string().optional(),
   finishDate: z.string().optional(),
   rating: z.number().min(0).max(5).optional(),

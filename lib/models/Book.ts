@@ -30,7 +30,7 @@ const BookSchema = new Schema<BookDocument>(
     },
     status: {
       type: String,
-      enum: ["To Read", "In Progress", "Completed"],
+      enum: ["To Read", "In Progress", "Completed", "Did Not Finish"],
       required: [true, "Status is required"],
       index: true,
     },
