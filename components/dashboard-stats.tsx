@@ -1,13 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Heart } from "lucide-react"
-import type { Book as BookType } from "@/app/page"
+import type { Book } from "@/types"
 
 interface DashboardStatsProps {
-  books: BookType[]
+  books: Book[]
+  yearlyGoal: number
 }
 
-export function DashboardStats({ books }: DashboardStatsProps) {
+export function DashboardStats({ books, yearlyGoal }: DashboardStatsProps) {
   const currentYear = new Date().getFullYear()
   const booksReadThisYear = books.filter(
     (book) => book.status === "Completed" && book.finishDate && new Date(book.finishDate).getFullYear() === currentYear,
@@ -15,7 +16,6 @@ export function DashboardStats({ books }: DashboardStatsProps) {
 
   const booksInProgress = books.filter((book) => book.status === "In Progress").length
   const totalBooks = books.length
-  const yearlyGoal = 24 // Default goal, could be made configurable
   const goalProgress = (booksReadThisYear / yearlyGoal) * 100
 
   return (
