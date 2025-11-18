@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
+import { getSession } from "@/lib/auth-helpers"
 import dbConnect from "@/lib/mongodb"
 import BookModel from "@/lib/models/Book"
 import ReadingSessionModel from "@/lib/models/ReadingSession"
@@ -9,14 +9,16 @@ import { v4 as uuidv4 } from "uuid"
 // POST /api/migrate - Migrate localStorage data to database
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const session = await getSession()
 
-    if (!userId) {
+    if (!session) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
+
+    const userId = session.user.id
 
     const body = await request.json()
 

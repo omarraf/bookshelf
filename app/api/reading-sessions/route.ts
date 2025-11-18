@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
+import { getSession } from "@/lib/auth-helpers"
 import dbConnect from "@/lib/mongodb"
 import ReadingSessionModel from "@/lib/models/ReadingSession"
 import { createReadingSessionSchema } from "@/lib/validations"
@@ -8,14 +8,16 @@ import { v4 as uuidv4 } from "uuid"
 // GET /api/reading-sessions - Get all reading sessions for the authenticated user
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const session = await getSession()
 
-    if (!userId) {
+    if (!session) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
+
+    const userId = session.user.id
 
     await dbConnect()
 
@@ -53,14 +55,16 @@ export async function GET(request: NextRequest) {
 // POST /api/reading-sessions - Create a new reading session
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const session = await getSession()
 
-    if (!userId) {
+    if (!session) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
+
+    const userId = session.user.id
 
     const body = await request.json()
 

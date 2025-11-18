@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
+import { getSession } from "@/lib/auth-helpers"
 import dbConnect from "@/lib/mongodb"
 import BookModel from "@/lib/models/Book"
 import { createBookSchema } from "@/lib/validations"
@@ -8,14 +8,16 @@ import { v4 as uuidv4 } from "uuid"
 // GET /api/books - Get all books for the authenticated user
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const session = await getSession()
 
-    if (!userId) {
+    if (!session) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
+
+    const userId = session.user.id
 
     await dbConnect()
 
@@ -60,14 +62,16 @@ export async function GET(request: NextRequest) {
 // POST /api/books - Create a new book
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const session = await getSession()
 
-    if (!userId) {
+    if (!session) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
+
+    const userId = session.user.id
 
     const body = await request.json()
 

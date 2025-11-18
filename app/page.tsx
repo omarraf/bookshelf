@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useUser } from "@clerk/nextjs"
+import { useSession } from "@/lib/auth-client"
 import { Header } from "@/components/header"
 import { BookList } from "@/components/book-list"
 import { AddBookDialog } from "@/components/add-book-dialog"
@@ -16,7 +16,7 @@ import { toast } from "sonner"
 import type { Book, ReadingSession, UserSettings } from "@/types"
 
 export default function HomePage() {
-  const { isLoaded, isSignedIn } = useUser()
+  const { data: session, isPending } = useSession()
   const [books, setBooks] = useState<Book[]>([])
   const [readingSessions, setReadingSessions] = useState<ReadingSession[]>([])
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null)
@@ -26,10 +26,10 @@ export default function HomePage() {
 
   // Load data from API on mount
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (!isPending && session) {
       loadData()
     }
-  }, [isLoaded, isSignedIn])
+  }, [isPending, session])
 
   const loadData = async () => {
     setIsLoading(true)
@@ -239,7 +239,7 @@ export default function HomePage() {
   }
 
   // Show loading state
-  if (!isLoaded || isLoading) {
+  if (isPending || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -251,7 +251,7 @@ export default function HomePage() {
   }
 
   // User must be signed in (middleware should handle this, but just in case)
-  if (!isSignedIn) {
+  if (!session) {
     return null
   }
 

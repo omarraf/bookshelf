@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useUser } from "@clerk/nextjs"
+import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,7 @@ import { Loader2, Save, ArrowLeft, Target } from "lucide-react"
 import type { UserSettings } from "@/types"
 
 export default function SettingsPage() {
-  const { isLoaded, isSignedIn } = useUser()
+  const { data: session, isPending } = useSession()
   const router = useRouter()
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [yearlyGoal, setYearlyGoal] = useState<number>(24)
@@ -20,10 +20,10 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (!isPending && session) {
       loadSettings()
     }
-  }, [isLoaded, isSignedIn])
+  }, [isPending, session])
 
   const loadSettings = async () => {
     setIsLoading(true)
@@ -75,7 +75,7 @@ export default function SettingsPage() {
     }
   }
 
-  if (!isLoaded || isLoading) {
+  if (isPending || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -86,7 +86,7 @@ export default function SettingsPage() {
     )
   }
 
-  if (!isSignedIn) {
+  if (!session) {
     return null
   }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
+import { getSession } from "@/lib/auth-helpers"
 import dbConnect from "@/lib/mongodb"
 import BookModel from "@/lib/models/Book"
 import { updateBookSchema } from "@/lib/validations"
@@ -10,14 +10,16 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth()
+    const session = await getSession()
 
-    if (!userId) {
+    if (!session) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
+
+    const userId = session.user.id
 
     const { id } = await params
     const body = await request.json()
@@ -113,14 +115,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId } = await auth()
+    const session = await getSession()
 
-    if (!userId) {
+    if (!session) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
+
+    const userId = session.user.id
 
     const { id } = await params
 

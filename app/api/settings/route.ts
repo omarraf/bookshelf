@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
+import { getSession } from "@/lib/auth-helpers"
 import dbConnect from "@/lib/mongodb"
 import UserSettingsModel from "@/lib/models/UserSettings"
 import { updateUserSettingsSchema } from "@/lib/validations"
@@ -7,14 +7,16 @@ import { updateUserSettingsSchema } from "@/lib/validations"
 // GET /api/settings - Get user settings
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const session = await getSession()
 
-    if (!userId) {
+    if (!session) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
+
+    const userId = session.user.id
 
     await dbConnect()
 
@@ -62,14 +64,16 @@ export async function GET(request: NextRequest) {
 // PUT /api/settings - Update user settings
 export async function PUT(request: NextRequest) {
   try {
-    const { userId } = await auth()
+    const session = await getSession()
 
-    if (!userId) {
+    if (!session) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }
       )
     }
+
+    const userId = session.user.id
 
     const body = await request.json()
 
